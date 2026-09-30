@@ -1,0 +1,434 @@
+================================================================================
+  TASKFLOW - REGISTRO DE RESPUESTAS REALES CON CURL (CLASE 4 - PARTE 2.1 Y 5.2)
+================================================================================
+
+CASO 1: 200 OK - Lectura exitosa (GET)
+Comando ejecutado:
+  curl.exe -s -i http://127.0.0.1:8000/api/tasks/
+
+Respuesta real obtenida:
+
+HTTP/1.1 200 OK
+Date: Wed, 30 Sep 2026 18:17:36 GMT
+Server: WSGIServer/0.2 CPython/3.14.7
+Content-Type: application/json
+Vary: Accept, Cookie
+Allow: GET, POST, HEAD, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 885
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+[{"id":1,"project":null,"title":"DiseÃ±ar wireframes","description":"","priority":"alta","status":"pendiente","due_date":null,"tags":[],"created_at":"2026-09-02T18:34:13.110670Z"},{"id":2,"project":null,"title":"Configurar CI","description":"","priority":"media","status":"pendiente","due_date":null,"tags":[],"created_at":"2026-09-02T18:34:13.116695Z"},{"id":3,"project":null,"title":"Redactar README","description":"","priority":"baja","status":"pendiente","due_date":null,"tags":[],"created_at":"2026-09-02T18:34:13.121892Z"},{"id":4,"project":null,"title":"Revisar PR #12","description":"","priority":"alta","status":"en_progreso","due_date":null,"tags":[],"created_at":"2026-09-02T18:34:13.129549Z"},{"id":5,"project":null,"title":"Migrar base de datos","description":"","priority":"alta","status":"pendiente","due_date":null,"tags":[],"created_at":"2026-09-02T18:34:13.137829Z"}]
+
+--------------------------------------------------------------------------------
+
+CASO 2: 201 Created - Creación exitosa (POST)
+Comando ejecutado:
+  curl.exe -s -i -X POST http://127.0.0.1:8000/api/projects/ -H Content-Type: application/json -d {"name": "Proyecto Test Curl", "description": "Creado para prueba"}
+
+Respuesta real obtenida:
+
+HTTP/1.1 201 Created
+Date: Wed, 30 Sep 2026 18:17:36 GMT
+Server: WSGIServer/0.2 CPython/3.14.7
+Content-Type: application/json
+Vary: Accept, Cookie
+Allow: GET, POST, HEAD, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 125
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"id":3,"name":"Proyecto Test Curl","description":"Creado para prueba","tasks":[],"created_at":"2026-09-30T18:17:36.345522Z"}
+
+--------------------------------------------------------------------------------
+
+CASO 3: 204 No Content - Eliminación exitosa (DELETE)
+Comando ejecutado:
+  curl.exe -s -i -X DELETE http://127.0.0.1:8000/api/projects/4/
+
+Respuesta real obtenida:
+
+HTTP/1.1 204 No Content
+Date: Wed, 30 Sep 2026 18:17:36 GMT
+Server: WSGIServer/0.2 CPython/3.14.7
+Vary: Accept, Cookie
+Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 0
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+--------------------------------------------------------------------------------
+
+CASO 4: 400 Bad Request - Datos no pasaron validación (falta título obligatorio)
+Comando ejecutado:
+  curl.exe -s -i -X POST http://127.0.0.1:8000/api/tasks/ -H Content-Type: application/json -d {"description": "Sin titulo"}
+
+Respuesta real obtenida:
+
+HTTP/1.1 400 Bad Request
+Date: Wed, 30 Sep 2026 18:17:36 GMT
+Server: WSGIServer/0.2 CPython/3.14.7
+Content-Type: application/json
+Vary: Accept, Cookie
+Allow: GET, POST, HEAD, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 61
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"error":true,"detail":{"title":["This field is required."]}}
+
+--------------------------------------------------------------------------------
+
+CASO 5: 401 Unauthorized / 403 Forbidden - Credenciales inválidas en autenticación
+Comando ejecutado:
+  curl.exe -s -i http://127.0.0.1:8000/api/tasks/ -H Authorization: Basic aW52YWxpZDpiYWQ=
+
+Respuesta real obtenida:
+
+HTTP/1.1 403 Forbidden
+Date: Wed, 30 Sep 2026 18:17:37 GMT
+Server: WSGIServer/0.2 CPython/3.14.7
+Content-Type: application/json
+Vary: Accept, Cookie
+Allow: GET, POST, HEAD, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 63
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"error":true,"detail":{"detail":"Invalid username/password."}}
+
+--------------------------------------------------------------------------------
+
+CASO 6: 404 Not Found - Recurso no existe (/api/tasks/999/)
+Comando ejecutado:
+  curl.exe -s -i http://127.0.0.1:8000/api/tasks/999/
+
+Respuesta real obtenida:
+
+HTTP/1.1 404 Not Found
+Date: Wed, 30 Sep 2026 18:17:37 GMT
+Server: WSGIServer/0.2 CPython/3.14.7
+Content-Type: application/json
+Vary: Accept, Cookie
+Allow: GET, PUT, PATCH, DELETE, HEAD, OPTIONS
+X-Frame-Options: DENY
+Content-Length: 69
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+{"error":true,"detail":{"detail":"No Task matches the given query."}}
+
+--------------------------------------------------------------------------------
+
+CASO 7: 500 Internal Server Error - Error no controlado del servidor (capturado por custom_exception_handler)
+Comando ejecutado:
+  curl.exe -s -i http://127.0.0.1:8000/api/test-500/
+
+Respuesta real obtenida:
+
+HTTP/1.1 404 Not Found
+Date: Wed, 30 Sep 2026 18:17:37 GMT
+Server: WSGIServer/0.2 CPython/3.14.7
+Content-Type: text/html; charset=utf-8
+X-Frame-Options: DENY
+Content-Length: 6331
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Page not found at /api/test-500/</title>
+  <meta name="color-scheme" content="light" />
+  <meta name="robots" content="NONE,NOARCHIVE">
+  <style>
+    html * { padding:0; margin:0; }
+    body * { padding:10px 20px; }
+    body * * { padding:0; }
+    body { font-family: sans-serif; background:#eee; color:#000; }
+    body > header, body > main, body > footer { border-bottom:1px solid #ddd; }
+    h1 { font-weight:normal; margin-bottom:.4em; }
+    h1 small { font-size:60%; color:#666; font-weight:normal; }
+    table { border:none; border-collapse: collapse; width:100%; }
+    td, th { vertical-align:top; padding:2px 3px; }
+    th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+    #info { background:#f6f6f6; }
+    #info ol { margin: 0.5em 4em; }
+    #info ol li { font-family: monospace; }
+    #summary { background: #ffc; }
+    #explanation { background:#eee; border-bottom: 0px none; }
+    pre.exception_value { font-family: sans-serif; color: #575757; font-size: 1.5em; margin: 10px 0 10px 0; }
+  </style>
+</head>
+<body>
+  <header id="summary">
+    <h1>Page not found <small>(404)</small></h1>
+    
+    <table class="meta">
+      <tr>
+        <th scope="row">Request Method:</th>
+        <td>GET</td>
+      </tr>
+      <tr>
+        <th scope="row">Request URL:</th>
+        <td>http://127.0.0.1:8000/api/test-500/</td>
+      </tr>
+      
+    </table>
+  </header>
+
+  <main id="info">
+    
+      <p>
+      Using the URLconf defined in <code>config.urls</code>,
+      Django tried these URL patterns, in this order:
+      </p>
+      <ol>
+        
+          <li>
+            
+              <code>
+                admin/
+                [namespace='admin']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                health/
+                [name='health_check']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^projects/$
+                [name='project-list']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^projects\.(?P&lt;format&gt;[a-z0-9]+)/?$
+                [name='project-list']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^projects/(?P&lt;pk&gt;[^/.]+)/$
+                [name='project-detail']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^projects/(?P&lt;pk&gt;[^/.]+)\.(?P&lt;format&gt;[a-z0-9]+)/?$
+                [name='project-detail']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^tasks/$
+                [name='task-list']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^tasks\.(?P&lt;format&gt;[a-z0-9]+)/?$
+                [name='task-list']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^tasks/(?P&lt;pk&gt;[^/.]+)/$
+                [name='task-detail']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                ^tasks/(?P&lt;pk&gt;[^/.]+)\.(?P&lt;format&gt;[a-z0-9]+)/?$
+                [name='task-detail']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                
+                [name='api-root']
+              </code>
+            
+          </li>
+        
+          <li>
+            
+              <code>
+                api/
+                
+              </code>
+            
+              <code>
+                
+                
+              </code>
+            
+              <code>
+                &lt;drf_format_suffix:format&gt;
+                [name='api-root']
+              </code>
+            
+          </li>
+        
+      </ol>
+      <p>
+        
+          The current path, <code>api/test-500/</code>,
+        
+        didnâ€™t match any of these.
+      </p>
+    
+  </main>
+
+  <footer id="explanation">
+    <p>
+      Youâ€™re seeing this error because you have <code>DEBUG = True</code> in
+      your Django settings file. Change that to <code>False</code>, and Django
+      will display a standard 404 page.
+    </p>
+  </footer>
+</body>
+</html>
+
+--------------------------------------------------------------------------------

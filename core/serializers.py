@@ -30,6 +30,16 @@ class TaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "No se puede marcar una tarea como completada sin fecha límite registrada."
             )
+
+        status = data.get("status") if "status" in data else (self.instance.status if self.instance else None)
+        project = data.get("project") if "project" in data else (self.instance.project if self.instance else None)
+
+        if status == "en_progreso" and project:
+            if not project.tasks.filter(status="completada").exists():
+                raise serializers.ValidationError(
+                    "Una tarea no puede tener status 'en_progreso' si su proyecto no tiene ninguna tarea completada todavía."
+                )
+
         return data
 
 
