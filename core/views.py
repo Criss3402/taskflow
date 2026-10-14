@@ -39,6 +39,12 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering_fields = ["due_date", "created_at", "priority"]
     search_fields = ["title", "description"]
 
+    def get_queryset(self):
+        return super().get_queryset().filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
         task = self.get_object()
