@@ -83,6 +83,30 @@ git push
 git pull
 ```
 
+## 10) Autenticación JWT (Clase 5)
+
+Las claves del JSON deben llamarse `username` y `password`; los valores son
+el usuario y la contraseña reales.
+
+```powershell
+# Windows PowerShell (curl es un alias de Invoke-WebRequest y curl.exe pierde las comillas del JSON)
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/token/ -ContentType "application/json" -Body '{"username": "cristian", "password": "1234"}'
+```
+
+```bash
+# Linux/Mac/Git Bash
+curl -X POST http://127.0.0.1:8000/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "cristian", "password": "1234"}'
+```
+
+Usar el token de acceso en una petición:
+
+```powershell
+$t = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/api/token/ -ContentType "application/json" -Body '{"username": "cristian", "password": "1234"}'
+Invoke-RestMethod -Uri http://127.0.0.1:8000/api/tasks/ -Headers @{Authorization = "Bearer $($t.access)"}
+```
+
 ---
 
 ### Verificación rápida de Python (intérprete interactivo, Clase 1 - Parte 0)

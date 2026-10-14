@@ -1,11 +1,13 @@
+from django.contrib.auth.models import User
 from django.http import JsonResponse
-from rest_framework import viewsets
+from rest_framework import generics, permissions, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from .models import Project
 from .repositories import TaskRepository
 from .serializers import ProjectSerializer, TaskSerializer
+from .serializers_auth import RegisterSerializer
 from .services import TaskService
 
 
@@ -17,6 +19,12 @@ def health_check(request):
 def trigger_500(request):
     """Endpoint de prueba para verificar respuesta 500 del custom_exception_handler"""
     raise RuntimeError("Error interno no controlado para prueba")
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
