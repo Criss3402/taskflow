@@ -1,19 +1,24 @@
+import logging
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import JsonResponse
 from rest_framework import generics, permissions, viewsets
 from rest_framework.decorators import action, api_view
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Project, ProjectMembership
+from .models import Project, ProjectMembership, SecurityLog
 from .permissions import IsProjectAdminOrReadOnly
 from .repositories import TaskRepository
 from .serializers import ProjectSerializer, TaskSerializer
 from .serializers_auth import RegisterSerializer
 from .services import MembershipService, TaskService
+from .throttles import LoginRateThrottle
+
+security_logger = logging.getLogger("security")
 
 
 def health_check(request):
@@ -30,6 +35,24 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+
+
+class ThrottledTokenObtainPairView(TokenObtainPairView):
+    throttle_classes = [LoginRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except AuthenticationFailed:
+            ip = request.META.get("REMOTE_ADDR")
+            username = request.data.get("username", "")
+            SecurityLog.objects.create(
+                action="login_failed",
+                detail=f"usuario={username}",
+                ip_address=ip,
+            )
+            security_logger.warning(f"Login fallido para usuario {username} desde {ip}")
+            raise
 
 
 class SocialLoginJWTView(APIView):
@@ -75,6 +98,16 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def check_project_admin(self, project):
         if not project or not MembershipService.is_admin(self.request.user, project):
+            ip = self.request.META.get("REMOTE_ADDR")
+            SecurityLog.objects.create(
+                user=self.request.user if self.request.user.is_authenticated else None,
+                action="permission_denied",
+                detail="Intento de crear o mover tarea sin ser admin del proyecto",
+                ip_address=ip,
+            )
+            security_logger.warning(
+                f"Permiso denegado para usuario {self.request.user} en proyecto {project} desde {ip}"
+            )
             raise PermissionDenied("Solo un admin del proyecto puede crear o mover tareas en él.")
 
     def perform_create(self, serializer):

@@ -1,4 +1,5 @@
 from datetime import date
+import nh3
 from rest_framework import serializers
 from .models import Project, Task, Tag
 from .services import HolidayService
@@ -25,6 +26,9 @@ class TaskSerializer(serializers.ModelSerializer):
         if not obj.due_date:
             return False
         return HolidayService.is_holiday(obj.due_date)
+
+    def validate_description(self, value):
+        return nh3.clean(value, tags=set())
 
     def validate_due_date(self, value):
         if value and value < date.today():
