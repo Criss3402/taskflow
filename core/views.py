@@ -15,7 +15,7 @@ from .permissions import IsProjectAdminOrReadOnly
 from .repositories import TaskRepository
 from .serializers import ProjectSerializer, TaskSerializer
 from .serializers_auth import RegisterSerializer
-from .services import MembershipService, TaskService
+from .services import MembershipService, NotificationService, TaskService
 from .throttles import LoginRateThrottle
 
 security_logger = logging.getLogger("security")
@@ -112,17 +112,20 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         self.check_project_admin(serializer.validated_data.get("project"))
-        serializer.save(owner=self.request.user)
+        task = serializer.save(owner=self.request.user)
+        NotificationService.notify_task_created(task)
 
     def perform_update(self, serializer):
         if "project" in serializer.validated_data:
             self.check_project_admin(serializer.validated_data.get("project"))
-        serializer.save()
+        task = serializer.save()
+        NotificationService.notify_task_updated(task)
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
         task = self.get_object()
         TaskService.mark_completed(task)
+        NotificationService.notify_task_completed(task)
         return Response(self.get_serializer(task).data)
 
     @action(detail=False, methods=["get"])
